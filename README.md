@@ -9,6 +9,6 @@ Select an appraporiate inlet flow waveform based on stoke volume (SV) and systol
 
 ## Select a syntheic profile
 8 different synthetic profiles are provided in this repo. Pick 1 for mapping.
-![alt text](Slide2-1.PNG)
+![alt text](Slide3.PNG)
 
 ## Reach out for more specific inlet waveforms and synthetic profile. 
