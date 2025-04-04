@@ -1,5 +1,5 @@
 # Personalizing-3DIVP-TBAD
-This code is to used to personalize synthetic 3D IVPs for computational studies in TBAD. <br>
+This code is used to personalize synthetic 3D IVPs for computational studies in TBAD. <br>
 Workflow for applying synthetic IVPs:
 ![alt text](Slide1.PNG)
 
