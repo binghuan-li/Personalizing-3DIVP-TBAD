@@ -16,3 +16,7 @@ The mean flowrate from Profile_scaling.py is outputted for 3EWM tuning.
 
 ## Reach out for more specific inlet waveforms and synthetic profiles. 
 email: k.wang21@imperial.ac.uk
+
+## Please cite the following publications
+1. Wang, Kaihong, Chlöe H. Armour, Baolei Guo, Zhihui Dong, and Xiao Yun Xu. "A new method for scaling inlet flow waveform in hemodynamic analysis of aortic dissection." International Journal for Numerical Methods in Biomedical Engineering 40, no. 9 (2024): e3855. <br>
+2.
