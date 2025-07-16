@@ -99,7 +99,7 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
             output_df.to_csv(outputDir + '/vel' + direction.upper() + '.csv',index=False,header=False)
 
 
-    if solver == 'cfx_xyz':
+    elif solver == 'cfx_xyz':
         cfx_arr = pos[:,:3] #taking x and y and z from position table
         cfx_arr = np.tile(cfx_arr,reps=(timepoints,1)) #repeat whole array of numbers x times (not repeating individual elements)
 
@@ -132,7 +132,7 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
 
 
 
-    if solver == 'fluent':
+    elif solver == 'fluent':
         # write .prof for ansys fluent
         xx, yy, zz = pos[:, 0].tolist(), pos[:, 1].tolist(), pos[:, 2].tolist()
         fu = np.swapaxes(velcfd[:, :, 0], 0, 1)
@@ -166,4 +166,8 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
                     fn.write(str(wi) + '\n')
                 fn.write(')\n')
                 fn.write(')')
+    else:
+        print('Solver type not yet implemented! Exit...');
+        return
+    
     print(f"Files written to {output_dir}. Done!")
