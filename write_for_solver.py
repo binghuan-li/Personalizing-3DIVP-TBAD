@@ -16,6 +16,8 @@ from scipy import interpolate
 
 
 def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str, tcycle:float, output_dir:str=None, time_step:float=0.001, time_interp:str='cubic'):
+    print("Writting solver profiles ...");
+    
     #-----------------------------------------------------------------------------------------------------------------------
     ## Options
 
@@ -164,4 +166,4 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
                     fn.write(str(wi) + '\n')
                 fn.write(')\n')
                 fn.write(')')
-    print("files written.")
+    print(f"Files written to {output_dir}. Done!")

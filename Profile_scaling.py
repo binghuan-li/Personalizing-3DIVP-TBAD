@@ -1,12 +1,12 @@
-import sys
 import os
 import os.path as osp
 import numpy as np
 from glob import glob
-from tqdm import tqdm
 import pandas as pd
 import pyvista as pv
-# pv.set_plot_theme("Document")
+pv.set_plot_theme("Document")
+
+
 # import matplotlib
 # matplotlib.use('Qt5Agg')
 # matplotlib.use('TkAgg')
@@ -152,12 +152,6 @@ def scaling(step:int, mapping_dir:str, profile_path:str, output_dir:str, patient
     #             n.append(k)
     #         synthetic_plannes_aligned[k].save(osp.join(outputDir, 'scaledProf_{:02d}.vtp'.format(k)))
                 
-                    
-
-
-
-
-
 
     # flow_extended = dut.compute_flowrate(extended_planes)['Q(t)']
     # plt.plot(flow_extended,label='extended')
@@ -167,15 +161,15 @@ def scaling(step:int, mapping_dir:str, profile_path:str, output_dir:str, patient
     Q_meanflow = dut.compute_flowrate(synthetic_plannes_aligned )['Q_mean']
     x_axis = np.zeros(len(flow))
     #plt.plot(SV_syn,label='synthetic')
-    
+
     fig = plt.figure();
-    ax = fig.add_subplot();
+    ax = fig.add_subplot(111);
     ax.plot(flowrate_tuned,label='tuned flat')
     ax.plot(flow,label='synthetic scaled')
     ax.axvline(0)
     ax.set_ylabel('flowrate [L/min]')
     plt.legend()
-    plt.show()
+    plt.savefig('./flow.png')
 
     mean_flowrate = flow.mean()
     print('The mean flowrate of the synthetic flowwaveform is:', mean_flowrate)

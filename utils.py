@@ -12,7 +12,7 @@ from scipy.interpolate import RBFInterpolator, NearestNDInterpolator
 from scipy.spatial import distance
 import pyvista as pv
 import vtk
-from vmtk import vmtkscripts
+# from vmtk import vmtkscripts
 
 
 def get_dz(ds):
