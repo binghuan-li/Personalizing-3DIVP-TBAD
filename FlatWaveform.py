@@ -1,5 +1,7 @@
 '''
-ECG tunned flow waveform
+ECG tunned flow waveform, 
+
+Use SI units.
 '''
 
 
@@ -115,12 +117,14 @@ if np.isclose(RCSD - RCSD_ECG, 0):
     SV_fft = [(Flow_fft[i + 1] + Flow_fft[i]) / 2 * Tcycle / len(x1) for i in range(len(t_fft) - 1)]
     SV_fft_total = np.round(np.sum(SV_fft) * 10 ** 6)
     #plt.plot(t_fft, Flow_fft * 10 ** 6 * 0.06, label='fft')
-    plt.plot(t_fft, Flow_fft, label='inlet flow')
-    plt.xlabel('Time / s')
-    plt.ylabel('Flowrate (L/min)')
 
-    plt.legend()
-    plt.show()
+    plt.figure();
+    plt.plot(t_fft, Flow_fft*60000, label='inlet flow');
+    plt.xlabel('Time [s]');
+    plt.ylabel('Volumetric Flow Rate [L/min]');
+    plt.legend();
+    plt.show();
+
     if np.isclose(SV_fft_total - SV_ECO, 0):
         data0 = {f'a0': a0* Scaling_factor}
         data1 = {f'a{i + 1}': [an[i]* Scaling_factor] for i in range(len(an))}
@@ -139,6 +143,9 @@ if np.isclose(RCSD - RCSD_ECG, 0):
         data0_cfx = {f'a0= {a0 * Scaling_factor} [m^3 s^-1]': ['']}
         data1_cfx = {f'a{i + 1}= {an[i]*Scaling_factor} [m^3 s^-1]': [''] for i in range(len(an))}
         data2_cfx = {f'b{i + 1}= {bn[i]*Scaling_factor} [m^3 s^-1]': [''] for i in range(len(bn))}
+        data0_cfx = {f'a0in= {a0 * Scaling_factor} ': ['']}
+        data1_cfx = {f'a0{i + 1}in= {an[i]*Scaling_factor}': [''] for i in range(len(an))}
+        data2_cfx = {f'b0{i + 1}in= {bn[i]*Scaling_factor}': [''] for i in range(len(bn))}
         combined_data_cfx = {**data0_cfx, **data1_cfx, **data2_cfx}
         df4 = pd.DataFrame(combined_data_cfx)
         df4 = df4.transpose()
@@ -147,24 +154,6 @@ if np.isclose(RCSD - RCSD_ECG, 0):
     else:
         message = f"Stroke volume is {SV_fft_total} and ECO measurement is {SV_ECO}. Please adjust scaling factor"
         print(message)
-
-
 else:
     message = f"RCSD is {np.round(RCSD, decimals=2)} and ECG value is {RCSD_ECG:.2f}. Please adjust Frequency_ratio."
     print(message)
-
-######## Fourier series used in CFX ##################
-#     Flow_fft = a0 + an[0]*np.cos(v0*t_fft) + bn[0]*np.sin(v0*t_fft) + an[1]*np.cos(2*v0*t_fft) + bn[1]*np.sin(2*v0*t_fft)  +\
-# an[2]*np.cos(3*v0*t_fft) + bn[2]*np.sin(3*v0*t_fft) + an[3]*np.cos(4*v0*t_fft) + bn[3]*np.sin(4*v0*t_fft)  +\
-# an[4]*np.cos(5*v0*t_fft) + bn[4]*np.sin(5*v0*t_fft) + an[5]*np.cos(6*v0*t_fft) + bn[5]*np.sin(5*v0*t_fft)  +\
-# an[6]*np.cos(7*v0*t_fft) + bn[6]*np.sin(7*v0*t_fft) + an[7]*np.cos(8*v0*t_fft) + bn[7]*np.sin(8*v0*t_fft)  +\
-# an[8]*np.cos(9*v0*t_fft) + bn[8]*np.sin(9*v0*t_fft) +\
-# an[9]*np.cos(10*v0*t_fft) + bn[9]*np.sin(10*v0*t_fft) + an[10]*np.cos(11*v0*t_fft) + bn[10]*np.sin(11*v0*t_fft)  +\
-# an[11]*np.cos(12*v0*t_fft) + bn[11]*np.sin(12*v0*t_fft) + an[12]*np.cos(13*v0*t_fft) + bn[12]*np.sin(13*v0*t_fft)  +\
-# an[13]*np.cos(14*v0*t_fft) + bn[13]*np.sin(14*v0*t_fft) + an[14]*np.cos(15*v0*t_fft) + bn[14]*np.sin(15*v0*t_fft)  +\
-# an[15]*np.cos(16*v0*t_fft) + bn[15]*np.sin(16*v0*t_fft) + an[16]*np.cos(17*v0*t_fft) + bn[16]*np.sin(17*v0*t_fft)  +\
-# an[17]*np.cos(18*v0*t_fft) + bn[17]*np.sin(18*v0*t_fft) + an[18]*np.cos(19*v0*t_fft) + bn[18]*np.sin(19*v0*t_fft)  +\
-# an[19]*np.cos(20*v0*t_fft) + bn[19]*np.sin(20*v0*t_fft) + an[20]*np.cos(21*v0*t_fft) + bn[20]*np.sin(21*v0*t_fft)  +\
-# an[21]*np.cos(22*v0*t_fft) + bn[21]*np.sin(22*v0*t_fft) + an[22]*np.cos(23*v0*t_fft) + bn[22]*np.sin(23*v0*t_fft)  +\
-# an[23]*np.cos(24*v0*t_fft) + bn[23]*np.sin(24*v0*t_fft) + an[24]*np.cos(25*v0*t_fft) + bn[24]*np.sin(25*v0*t_fft)
-

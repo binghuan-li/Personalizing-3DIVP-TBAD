@@ -1,38 +1,46 @@
-import sys
 import os
 import os.path as osp
-
-import matplotlib.pyplot as plt
 import numpy as np
-from numpy.random import default_rng
 import pyvista as pv
 import pandas as pd
 from glob import glob
 from tqdm import tqdm
 from scipy.interpolate import interp1d
-import utils as ut
-import descriptors_utils as dut
-from scipy import interpolate
 
 
-def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str, tcycle:float, output_dir:str=None, time_step:float=0.001, time_interp:str='cubic'):
-    print("Writting solver profiles ...");
-    
-    #-----------------------------------------------------------------------------------------------------------------------
-    ## Options
+def write_to_solver(solver:str, 
+                    identifier:str, 
+                    working_dir:str,
+                    aorta_geo:str, 
+                    tcycle:float, 
+                    output_dir:str=None, 
+                    time_step:float=0.001, 
+                    time_interp:str='cubic'):
+    '''
+    Args:
+        - solver:str, can be 'cfx', 'fluent'
+        - identifier:str, name of the case
+        - profile_dir:str, path to the resampled .vtp files
+        - aorta_geo:str, path to the aorta .stl file for aligning directions
+        - tcycle:float, period of cardiac cycle
+        - output_dir:str=None, if None, output to the same directory as the profile directory
+        - time_step:float=0.001, simulation time steps, default 1e-3 s
+        - time_interp:str='cubic', can be linear, nearest, quadratic
 
-    profilesDir = profile_dir
+    Return: None
+    '''
+    print(">> STEP 3/3: Writting solver profiles ... ", end='');
 
-    geoDir = inlet_plane
+    profilesDir = os.path.join(working_dir, 'prof_scaling')
+    geoDir = aorta_geo;
 
     if output_dir is None:
-        # output to the same directory as the profile directory
-        output_dir = profile_dir; 
-    outputDir = output_dir
+        output_dir = working_dir; 
+    outputDir = output_dir;
 
-    cfd_delta_t = time_step  # simulation time steps
-    cardiac_cycle_period = tcycle # period of cardiac cycle
-    time_interpolation = time_interp # can be linear, nearest, quadratic, ...
+    cfd_delta_t = time_step;
+    cardiac_cycle_period = tcycle;
+    time_interpolation = time_interp;
 
 
     ## determine the direction of aorta
@@ -42,13 +50,12 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
     aorta_min = aorta_pts.min(0)
     aorta_length = aorta_max - aorta_min
     sequence = ['xx','xx','xx']
-    sorted_with_indices = sorted(enumerate(aorta_length), key = lambda x: x[1])   # sort the length of aorta in x,y,z direction
-    #, and put it in the ascending order
+    # sort the length of aorta in x,y,z direction, and put it in the ascending order
+    sorted_with_indices = sorted(enumerate(aorta_length), key = lambda x: x[1])   
     indices = [item[0] for item in sorted_with_indices]
     sequence[indices[0]]= 'rl'
     sequence[indices[1]]= 'ap'
     sequence[indices[2]]= 'fh'
-    # sequence = ['rl','ap','fh']
 
 
     #-----------------------------------------------------------------------------------------------------------------------
@@ -67,8 +74,6 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
     vel4df = np.array([interp_planes[k]['Velocity'] for k in range(len(interp_planes))]) #change to lower case v in 'velocity' if using vtk files previously created in matlab
     velcfd = interp1d(t4df, vel4df, axis=0, kind=time_interpolation)(tcfd)
 
-
-
     if solver == 'cfx':
         cfx_arr = pos[:, :2] #taking x and y from position table
         cfx_arr = np.tile(cfx_arr,reps=(timepoints,1)) #repeat whole array of numbers x times (not repeating individual elements)
@@ -78,7 +83,6 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
 
         cfx_arr = np.concatenate((cfx_arr, time_stem),axis=1) # combine position and time arrays
 
-        df_list = []
         assert velcfd.shape[2] == 3
         #for i in range(velcfd_sampled.shape[2]):
         for i, direction in enumerate(sequence): #CHECK ORDER OF DIRECTIONS ARE CORRECT FOR INDIVIDUAL PATIENT #og was rl, ap, fh
@@ -108,7 +112,6 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
 
         cfx_arr = np.concatenate((cfx_arr, time_stem),axis=1) # combine position and time arrays
 
-        df_list = []
         assert velcfd.shape[2] == 3
         #for i in range(velcfd_sampled.shape[2]):
         sequence = ['rl','ap','fh']
@@ -129,8 +132,6 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
             output_df = pd.DataFrame(output_arr,columns=['1','2','3','4','5'])
             output_df = pd.concat((df_header,output_df), axis=0)
             output_df.to_csv(outputDir + '/vel' + direction.upper() + '.csv',index=False,header=False)
-
-
 
     elif solver == 'fluent':
         # write .prof for ansys fluent
@@ -167,7 +168,6 @@ def write_to_solver(solver:str, identifier:str, profile_dir:str, inlet_plane:str
                 fn.write(')\n')
                 fn.write(')')
     else:
-        print('Solver type not yet implemented! Exit...');
-        return
+        raise NotImplementedError('Solver type not yet implemented! Exit...');
     
-    print(f"Files written to {output_dir}. Done!")
+    print('Done!')

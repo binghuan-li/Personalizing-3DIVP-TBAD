@@ -4,18 +4,18 @@ import os.path as osp
 import numpy as np
 from glob import glob
 import pyvista as pv
-
 import utils as ut
 import descriptors_utils as dut
-import vtk
 
 
-def mapping(output_dir:str, source_profile_dir:str, inlet_plane:str, flip_normals:bool=True, identifier:str=None):
+def mapping(output_dir:str, 
+            source_profile_dir:str, 
+            inlet_plane:str, 
+            flip_normals:bool=True, 
+            identifier:str=None):
     
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir,exist_ok=True);
-    else:
-        print('Saving directory exists.');
+    print('>> STEP 1/3: Mapping... ', end='');
+    os.makedirs(output_dir,exist_ok=True);
 
     ##---------------------------------------------------------Do Not Change--------------------------------------------------------
     intp_options = {
@@ -94,12 +94,11 @@ def mapping(output_dir:str, source_profile_dir:str, inlet_plane:str, flip_normal
     for k in range(num_frames):
         interp_planes[k].points -= interp_planes[k].points.mean(0) - target_com
 
-    print('Mapping... done!');
-
-
     #-----------------------------------------------------------------------------------------------------------------------
     ## Save profiles to .vtp
+    savepath = os.path.join(output_dir, 'inlet_mapping');
+    os.makedirs(savepath, exist_ok=True);
     for k in range(num_frames):
-        interp_planes[k].save(osp.join(output_dir, identifier+'_{:02d}.vtp'.format(k)))
+        interp_planes[k].save(osp.join(savepath, identifier+'_{:02d}.vtp'.format(k)))
 
-
+    print('Done!')

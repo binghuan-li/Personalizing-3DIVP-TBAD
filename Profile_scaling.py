@@ -5,54 +5,65 @@ from glob import glob
 import pandas as pd
 import pyvista as pv
 pv.set_plot_theme("Document")
-
-
-# import matplotlib
-# matplotlib.use('Qt5Agg')
-# matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA, FastICA
 import descriptors_utils as dut
 from scipy import interpolate
 from collections import deque
 import utils as ut
 
 
-def scaling(step:int, mapping_dir:str, profile_path:str, output_dir:str, patient_specific:bool=True, identifier:str=None):
+def scaling(step:int, 
+            working_dir:str, 
+            profile_path:str, 
+            output_dir:str=None, 
+            patient_specific:bool=True, 
+            identifier:str=None):
+    
+    '''
+    Args:
+        - step:int, adjust this number [0-29] to ensure the same SDR between profile and synthetic flowwaveform
+        - mapping_dir:str, path to mapped .vtp files from inlet_mapping.py
+        - profile_path:str, path to the selected inlet flow waveform .csv file
+        - output_dir:str, 
+        - patient_specific:bool=True, 
+        - identifier:str=None
+
+    Return: None
+    '''
+    print('>> STEP 2/3: Scaling... ', end='')
 
     time_intp_options = {
         'T4df': 1,   # adjust to the real period.  for patients with 4D-flow, it should be the value from 4D-flow.
                                                     # For patients without 4D-flow, it should be the same value as expected period
         'Tfxd': 1,   #
-
         'num_frames_fxd': 20}
 
     Number = step #### Adjust this number [0-29] to ensure the same SDR between profile and synthetic flowwaveform ####
 
     # mapping directory
-    preprocDir = mapping_dir #r'C:\Users\lbing\Desktop\test_IVP' # Path to mapped .vtp files from inlet_mapping.py
+
+    preprocDir = os.path.join(working_dir, 'inlet_mapping') #r'C:\Users\lbing\Desktop\test_IVP' # Path to mapped .vtp files from inlet_mapping.py
     
     # profile path
     csv_path = profile_path  # path to the selected inlet flowwaveform .csv file
-    
-    
-    outputDir = output_dir;
-    
 
+    if output_dir is None:
+        output_dir = working_dir; 
+    outputDir =  os.path.join(output_dir, 'prof_scaling');
+    
     # saving_path
     if identifier is not None:
-        filename = identifier + '_scaled_mean_flowrate.csv'    #### Output the mean flowrate for 3EWM tuning
+        filename = identifier + '_scaled_mean_flowrate.csv';
     else:
-        filename = 'scaled_mean_flow_rate.csv'
+        filename = 'scaled_mean_flow_rate.csv';
     filepath= os.path.join(outputDir, filename)
+    os.makedirs(outputDir, exist_ok=True)
 
     patient_specific_4D = patient_specific   # True: point by point scaling; False: general scaling
     ##---------------------------------------------------------Do Not Change--------------------------------------------------------
 
-    if not os.path.exists(outputDir):
-        os.makedirs(outputDir, exist_ok=True)
+    
     synthetic_planes = [pv.read(fn) for fn in sorted(glob(osp.join(preprocDir, '*.vtp')))]  ## select the mapped file folder
-
 
 
     ## read flow waveform from Matlab output
@@ -91,12 +102,7 @@ def scaling(step:int, mapping_dir:str, profile_path:str, output_dir:str, patient
     for k in range(len(t_new)-1):
         SV_area.append((SV_syn[k] + SV_syn[k+1])/2 * 1/20)
 
-    total_SV_syn_chloe = np.sum(SV_area)*1000*1000 # unit ml/s
-
     ratio = np.max(SV_tuned) / np.max(SV_area)
-
-
-
 
     ## scale
     n=[]
@@ -117,65 +123,31 @@ def scaling(step:int, mapping_dir:str, profile_path:str, output_dir:str, patient
 
     ######################   4D-flow scaling  ############################  
     if patient_specific_4D == True:
-        ratio_all = np.ones(len(SV_syn))
         for k in range(len(SV_area)):
             if SV_area[k] != 0 and k !=19:
                 ratio_test = SV_tuned[k] / SV_area[k]
                 synthetic_plannes_aligned[k]['Velocity'] *= ratio_test
-                    #synthetic_plannes_aligned[k]['Velocity'] *= 1
                 n.append(k)
             synthetic_plannes_aligned[k].save(osp.join(outputDir, identifier+'scaledProf_{:02d}.vtp'.format(k)))
 
-
-
-    # if Number < 20:
-
-    #     for k in range(len(synthetic_plannes_aligned)):
-    #         if k !=0 and k != 19:
-    #             if  (SV_syn[k]>0 and flowrate_tuned[k] > 0) or (SV_syn[k]<0 and flowrate_tuned[k] < 0):
-    #                 synthetic_plannes_aligned[k]['Velocity'] *= ratio
-    #                 n.append(k)
-    #         else:
-    #             synthetic_plannes_aligned[k]['Velocity'] *= ratio_all[k]
-    #             n.append(k)
-    #         synthetic_plannes_aligned[k].save(osp.join(outputDir, 'scaledProf_{:02d}.vtp'.format(k)))
-
-    # else:
-    #     for k in range(len(synthetic_plannes_aligned)):
-    #         if k !=0 and k!= 19:
-    #             if  (SV_syn[k]>0 and flowrate_tuned[k] > 0) or (SV_syn[k]<0 and flowrate_tuned[k] < 0):
-    #                 synthetic_plannes_aligned[k]['Velocity'] *= ratio
-    #                 n.append(k)
-
-    #         else:
-    #             synthetic_plannes_aligned[k]['Velocity'] *= ratio_all[k]
-    #             n.append(k)
-    #         synthetic_plannes_aligned[k].save(osp.join(outputDir, 'scaledProf_{:02d}.vtp'.format(k)))
-                
-
-    # flow_extended = dut.compute_flowrate(extended_planes)['Q(t)']
-    # plt.plot(flow_extended,label='extended')
-    # plt.show()
-
     flow = dut.compute_flowrate(synthetic_plannes_aligned )['Q(t)']
     Q_meanflow = dut.compute_flowrate(synthetic_plannes_aligned )['Q_mean']
-    x_axis = np.zeros(len(flow))
-    #plt.plot(SV_syn,label='synthetic')
 
     fig = plt.figure();
     ax = fig.add_subplot(111);
-    ax.plot(flowrate_tuned,label='tuned flat')
-    ax.plot(flow,label='synthetic scaled')
-    ax.axvline(0)
+    ax.plot(flowrate_tuned, label='tuned flat')
+    ax.plot(flow, label='synthetic scaled')
+    ax.axvline(0, linestyle ="--")
+    ax.axhline(0, linestyle ="--")
     ax.set_ylabel('flowrate [L/min]')
     plt.legend()
-    plt.savefig('./flow.png')
+    plt.show()
 
     mean_flowrate = flow.mean()
-    print('The mean flowrate of the synthetic flowwaveform is:', mean_flowrate)
+    print('\tThe mean flowrate of the synthetic flowwaveform is:', mean_flowrate)
     df3= pd.DataFrame([Q_meanflow])
     df3.to_csv(filepath, index=False, header=False, mode='a')
-
-    print('Scaling... done!')
+    print('Done!')
+    
 
 
