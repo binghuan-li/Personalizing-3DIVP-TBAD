@@ -49,8 +49,7 @@ def mapping(output_dir:str,
     #
 
     normals = [source_profiles[k].compute_normals()['Normals'].mean(0) for k in range(num_frames)] # computes the average normal vector of the inlet plane at each timepoint
-
-    #
+    
     if flip_normals: normals = [normals[k] * -1 for k in range(num_frames)]    #  flips the direction of the normal vectors
 
 

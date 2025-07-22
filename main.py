@@ -1,43 +1,65 @@
-import os
-import argparse
+"""
+main.py
 
+Driver to generate synthetic 4D flow inlet velocity profile for CFD simulation.
+
+Ref. https://doi.org/10.1016/j.compbiomed.2025.110158
+
+22/07/2025
+"""
+
+import os
 from inlet_mapping import mapping
 from Profile_scaling import scaling
 from write_for_solver import write_to_solver
 
-## ======================================================================
+if __name__ == '__main__':
+    # unique identifier of the case
+    identifier = ''
 
-parser = argparse.ArgumentParser(description='');
-parser.add_argument('--identifier', type=str, default='TEST_CASE', help='unique identifier of the patient.');
-parser.add_argument('--save_dir', type=str, help='path to the working/saving directory', required=True);
-parser.add_argument('--source_dir', type=str, help='path to the selected synthetic IVP folder', required=True);
-parser.add_argument('--in_plane', type=str, help='path to the stl file of the target plane, in .stl format', required=True);
-parser.add_argument('--profile_path', type=str, help='path to the standard flowrate waveform, in .csv format', required=True);
-parser.add_argument('--tcycle', type=float, help='cardiac cycle.', required=True);
-parser.add_argument('--flip_normal', action='store_true', help='usually set to True, but might have to change depending on target plane orientation.');
-parser.add_argument('--solver', type=str, default='cfx', help='usually set to True, but might have to change depending on target plane orientation.');
+    # working directory
+    working_dir = r''
 
-args = parser.parse_args();
+    # path to the selected synthetic IVP, e.g., './Profiles/Case01'
+    source_profile_dir = r''
 
-## ======================================================================
+    # path to the target inlet plane geometry, in format .stl
+    target_profile_fn = r''
 
-working_dir = os.path.join(args.save_dir, args.identifier)
+    # path to the aorta geometry for direction alignment, in format .stl
+    aorta_geo = r'';
 
-mapping(output_dir=working_dir, 
-        source_profile_dir=args.source_dir, 
-        inlet_plane=args.in_plane, 
-        flip_normals=args.flip_normal, 
-        identifier=args.identifier)
+    # flip the velocity direction. Usually, this is set to True, 
+    # but might have to change depending on target plane orientation
+    flip_normals = False
 
-scaling(step=20, 
-        mapping_dir=working_dir, 
-        profile_path=args.profile_path, 
+    # path to the selected 0D inlet flow waveform, in format .csv
+    profile_path = r''
+
+    # time 
+    tcycle=0.;
+
+
+    working_dir = os.path.join(working_dir, identifier)
+    mapping(
+        output_dir=working_dir, 
+        source_profile_dir=source_profile_dir, inlet_plane=target_profile_fn, 
+        flip_normals=flip_normals, 
+        identifier=identifier)
+    
+    # profile_path = r'D:\ZhongShan_Data\post_setup\ZS_post1_IVP\ZS_post1_IVP_flowrate.csv'
+
+    scaling(
+        step=20, 
+        working_dir=working_dir, 
+        profile_path=profile_path, 
         output_dir=working_dir, 
         patient_specific=True, 
-        identifier=args.identifier);
+        identifier=identifier)
 
-write_to_solver(solver=args.solver, 
-                identifier=args.identifier, 
-                profile_dir=working_dir, 
-                inlet_plane=args.in_plane, 
-                tcycle=args.tcycle);
+    write_to_solver(
+        solver='cfx',
+        identifier=identifier, 
+        working_dir=working_dir, 
+        aorta_geo=aorta_geo, 
+        tcycle=tcycle);
